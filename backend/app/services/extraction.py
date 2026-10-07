@@ -1,10 +1,14 @@
+import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
 from app.models.document import Document
 from app.models.extracted_field import ExtractedField
 from app.utils.parsers import parse_document
 from app.services.llm import get_llm_provider
+from app.services.storage import storage_service
 from app.core.fields import CANONICAL_FIELDS_PER_DOC
+
+logger = logging.getLogger(__name__)
 
 class ExtractionService:
     @classmethod
@@ -54,6 +58,7 @@ class ExtractionService:
             return True
 
         except Exception as e:
+            logger.exception("Document extraction failed: %s", e)
             await db.rollback()
             document.extraction_status = "failed"
             await db.commit()
